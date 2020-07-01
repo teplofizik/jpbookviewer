@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{03FCEAB4-0ED8-4711-8102-76312AB4353F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>G3D</RootNamespace>
+    <AssemblyName>G3D</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\OpenTK_Test2\bin\Debug\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK.Compatibility, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\OpenTK_Test2\bin\Debug\OpenTK.Compatibility.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK.GLControl, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\OpenTK_Test2\bin\Debug\OpenTK.GLControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="G3D\Controls\GlControlS.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="G3D\Graph2D\OGLArc.cs" />
+    <Compile Include="G3D\Graph2D\OGLCircle.cs" />
+    <Compile Include="G3D\Graph2D\OGLObject.cs" />
+    <Compile Include="G3D\Graph2D\OGLPolygonObject.cs" />
+    <Compile Include="G3D\Graph2D\OGLRectangle.cs" />
+    <Compile Include="G3D\Lighting\Ambient.cs" />
+    <Compile Include="G3D\Lighting\AmbientBright.cs" />
+    <Compile Include="G3D\Lighting\LightSource.cs" />
+    <Compile Include="G3D\Models\Import\ObjModel.cs" />
+    <Compile Include="G3D\Models\Model.cs" />
+    <Compile Include="G3D\Navigation\Navigation2D.cs" />
+    <Compile Include="G3D\ScriptExec.cs" />
+    <Compile Include="G3D\Scripts\Base\Nav2DScript.cs" />
+    <Compile Include="G3D\Scripts\Base\Basic2DScript.cs" />
+    <Compile Include="G3D\Scripts\Base\Basic3DScript.cs" />
+    <Compile Include="G3D\Scripts\Base\Basic3DScriptP.cs" />
+    <Compile Include="G3D\Scripts\Geometry.cs" />
+    <Compile Include="G3D\Scripts\GLFrame.cs" />
+    <Compile Include="G3D\Scripts\Interface\ICameraControl.cs" />
+    <Compile Include="G3D\Scripts\Script.cs" />
+    <Compile Include="G3D\Shaders\BaseShader.cs" />
+    <Compile Include="G3D\Shaders\GLProgram.cs" />
+    <Compile Include="G3D\Shaders\TextShader.cs" />
+    <Compile Include="G3D\Texture\BitmapTexture.cs" />
+    <Compile Include="G3D\Texture\Format\TextureImage.cs" />
+    <Compile Include="G3D\Texture\Generated\TextureSolid.cs" />
+    <Compile Include="G3D\Texture\Texture.cs" />
+    <Compile Include="G3D\Text\ImageOutput.cs" />
+    <Compile Include="G3D\Text\TextGenerator.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
