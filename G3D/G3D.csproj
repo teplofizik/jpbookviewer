@@ -54,6 +54,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="G3D\Controls\Editor2dControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="G3D\Controls\GlControlS.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -67,12 +70,15 @@
     <Compile Include="G3D\Lighting\LightSource.cs" />
     <Compile Include="G3D\Models\Import\ObjModel.cs" />
     <Compile Include="G3D\Models\Model.cs" />
+    <Compile Include="G3D\Navigation\Navigation.cs" />
     <Compile Include="G3D\Navigation\Navigation2D.cs" />
     <Compile Include="G3D\ScriptExec.cs" />
     <Compile Include="G3D\Scripts\Base\Nav2DScript.cs" />
     <Compile Include="G3D\Scripts\Base\Basic2DScript.cs" />
     <Compile Include="G3D\Scripts\Base\Basic3DScript.cs" />
     <Compile Include="G3D\Scripts\Base\Basic3DScriptP.cs" />
+    <Compile Include="G3D\Scripts\Editor2d\BaseEditor2d.cs" />
+    <Compile Include="G3D\Scripts\Editor2d\Editor2dUi.cs" />
     <Compile Include="G3D\Scripts\Geometry.cs" />
     <Compile Include="G3D\Scripts\GLFrame.cs" />
     <Compile Include="G3D\Scripts\Interface\ICameraControl.cs" />
@@ -83,9 +89,21 @@
     <Compile Include="G3D\Texture\BitmapTexture.cs" />
     <Compile Include="G3D\Texture\Format\TextureImage.cs" />
     <Compile Include="G3D\Texture\Generated\TextureSolid.cs" />
+    <Compile Include="G3D\Texture\HintTexture.cs" />
     <Compile Include="G3D\Texture\Texture.cs" />
     <Compile Include="G3D\Text\ImageOutput.cs" />
     <Compile Include="G3D\Text\TextGenerator.cs" />
+    <Compile Include="G3D\UI\Buffers\ImageTexture.cs" />
+    <Compile Include="G3D\UI\Buffers\StringTexture.cs" />
+    <Compile Include="G3D\UI\Buffers\TextureBuffer.cs" />
+    <Compile Include="G3D\UI\Controls\ButtonControl.cs" />
+    <Compile Include="G3D\UI\Controls\CheckButtonControl.cs" />
+    <Compile Include="G3D\UI\Controls\ImageUIControl.cs" />
+    <Compile Include="G3D\UI\Editor\BaseDocument.cs" />
+    <Compile Include="G3D\UI\IGLDrawer.cs" />
+    <Compile Include="G3D\UI\Tool\ToolAction.cs" />
+    <Compile Include="G3D\UI\UIControl.cs" />
+    <Compile Include="G3D\UI\UIInterface.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
