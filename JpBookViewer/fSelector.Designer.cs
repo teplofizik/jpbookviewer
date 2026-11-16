@@ -1,4 +1,6 @@
-﻿namespace JefViewer
+﻿#nullable disable
+
+namespace JpBookViewer
 {
     partial class fSelector
     {
@@ -39,9 +41,9 @@
             // 
             // bClose
             // 
-            this.bClose.Location = new System.Drawing.Point(12, 63);
+            this.bClose.Location = new System.Drawing.Point(12, 70);
             this.bClose.Name = "bClose";
-            this.bClose.Size = new System.Drawing.Size(144, 23);
+            this.bClose.Size = new System.Drawing.Size(144, 30);
             this.bClose.TabIndex = 0;
             this.bClose.Text = "Close";
             this.bClose.UseVisualStyleBackColor = true;
@@ -49,9 +51,9 @@
             // 
             // bOpen
             // 
-            this.bOpen.Location = new System.Drawing.Point(362, 63);
+            this.bOpen.Location = new System.Drawing.Point(362, 70);
             this.bOpen.Name = "bOpen";
-            this.bOpen.Size = new System.Drawing.Size(144, 23);
+            this.bOpen.Size = new System.Drawing.Size(144, 30);
             this.bOpen.TabIndex = 1;
             this.bOpen.Text = "Open";
             this.bOpen.UseVisualStyleBackColor = true;
@@ -59,17 +61,20 @@
             // 
             // tPath
             // 
+            this.tPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tPath.Location = new System.Drawing.Point(12, 12);
             this.tPath.Name = "tPath";
-            this.tPath.Size = new System.Drawing.Size(459, 20);
+            this.tPath.Size = new System.Drawing.Size(459, 23);
             this.tPath.TabIndex = 2;
             this.tPath.TextChanged += new System.EventHandler(this.tPath_TextChanged);
             // 
             // bSelectDir
             // 
-            this.bSelectDir.Location = new System.Drawing.Point(477, 10);
+            this.bSelectDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.bSelectDir.Location = new System.Drawing.Point(477, 11);
             this.bSelectDir.Name = "bSelectDir";
-            this.bSelectDir.Size = new System.Drawing.Size(29, 23);
+            this.bSelectDir.Size = new System.Drawing.Size(29, 25);
             this.bSelectDir.TabIndex = 3;
             this.bSelectDir.Text = "...";
             this.bSelectDir.UseVisualStyleBackColor = true;
@@ -78,33 +83,36 @@
             // dFolder
             // 
             this.dFolder.Description = "Select folder with Codh.Rois data";
+            this.dFolder.UseDescriptionForTitle = true;
             // 
             // lKanjiViewMode
             // 
             this.lKanjiViewMode.AutoSize = true;
-            this.lKanjiViewMode.Location = new System.Drawing.Point(12, 41);
+            this.lKanjiViewMode.Location = new System.Drawing.Point(12, 44);
             this.lKanjiViewMode.Name = "lKanjiViewMode";
-            this.lKanjiViewMode.Size = new System.Drawing.Size(115, 13);
+            this.lKanjiViewMode.Size = new System.Drawing.Size(115, 15);
             this.lKanjiViewMode.TabIndex = 4;
             this.lKanjiViewMode.Text = "Режим отображения:";
             // 
             // cbKanjiViewMode
             // 
+            this.cbKanjiViewMode.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.cbKanjiViewMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbKanjiViewMode.FormattingEnabled = true;
             this.cbKanjiViewMode.Items.AddRange(new object[] {
             "Поверх текста",
             "В квадратике в углу, в тексте отмечается только область "});
-            this.cbKanjiViewMode.Location = new System.Drawing.Point(133, 38);
+            this.cbKanjiViewMode.Location = new System.Drawing.Point(133, 41);
             this.cbKanjiViewMode.Name = "cbKanjiViewMode";
-            this.cbKanjiViewMode.Size = new System.Drawing.Size(338, 21);
+            this.cbKanjiViewMode.Size = new System.Drawing.Size(373, 23);
             this.cbKanjiViewMode.TabIndex = 5;
             // 
             // fSelector
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(518, 98);
+            this.ClientSize = new System.Drawing.Size(518, 112);
             this.Controls.Add(this.cbKanjiViewMode);
             this.Controls.Add(this.lKanjiViewMode);
             this.Controls.Add(this.bSelectDir);

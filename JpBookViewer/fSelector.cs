@@ -1,80 +1,65 @@
-﻿using JefViewer.SewViewer.Types;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+﻿using JpBookViewer.Books;
 
-namespace JefViewer
+namespace JpBookViewer;
+
+public partial class fSelector : Form
 {
-    public partial class fSelector : Form
+    private readonly Config _config = Config.Load();
+
+    public fSelector()
     {
-        Config C = Config.Load();
+        InitializeComponent();
+    }
 
-        public fSelector()
+    private void bClose_Click(object? sender, EventArgs e)
+    {
+        Close();
+    }
+
+    private void CheckButtonState()
+    {
+        bOpen.Enabled = CodhRois.CheckIsRois(tPath.Text);
+    }
+
+    private void tPath_TextChanged(object? sender, EventArgs e)
+    {
+        CheckButtonState();
+    }
+
+    private void bSelectDir_Click(object? sender, EventArgs e)
+    {
+        if (Directory.Exists(tPath.Text))
+            dFolder.SelectedPath = tPath.Text;
+
+        if (dFolder.ShowDialog(this) == DialogResult.OK)
         {
-            InitializeComponent();
-        }
-
-        private void bClose_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void CheckButtonState()
-        {
-            bool Exists = Directory.Exists(tPath.Text);
-
-            if (Exists)
-            {
-                Exists &= CodhRois.CheckIsRois(tPath.Text);
-            }
-
-            bOpen.Enabled = Exists;
-        }
-
-        private void tPath_TextChanged(object sender, EventArgs e)
-        {
+            tPath.Text = dFolder.SelectedPath;
             CheckButtonState();
         }
+    }
 
-        private void bSelectDir_Click(object sender, EventArgs e)
+    private void fSelector_Load(object? sender, EventArgs e)
+    {
+        tPath.Text = _config.LastPath;
+        cbKanjiViewMode.SelectedIndex = _config.ViewMode;
+        CheckButtonState();
+    }
+
+    private void bOpen_Click(object? sender, EventArgs e)
+    {
+        Hide();
+
+        var main = new fMain(tPath.Text)
         {
-            if(Directory.Exists(tPath.Text))
-                dFolder.SelectedPath = tPath.Text;
+            C = _config,
+            KanjiViewMode = cbKanjiViewMode.SelectedIndex,
+        };
+        main.FormClosed += (_, _) => Close();
 
-            if (dFolder.ShowDialog() == DialogResult.OK)
-            {
-                tPath.Text = dFolder.SelectedPath;
-                CheckButtonState();
-            }
-        }
+        _config.LastPath = tPath.Text;
+        _config.ViewMode = cbKanjiViewMode.SelectedIndex;
+        _config.Save();
 
-        private void fSelector_Load(object sender, EventArgs e)
-        {
-            tPath.Text = C.LastPath;
-            cbKanjiViewMode.SelectedIndex = C.ViewMode;
-            CheckButtonState();
-        }
-
-        private void bOpen_Click(object sender, EventArgs e)
-        {
-            Hide();
-
-            var M = new fMain(tPath.Text);
-            M.Closed += (s, args) => this.Close();
-            M.C = C;
-            M.KanjiViewMode = cbKanjiViewMode.SelectedIndex;
-
-            C.LastPath = tPath.Text;
-            C.ViewMode = cbKanjiViewMode.SelectedIndex;
-            C.Save();
-
-            M.Show();
-        }
+        main.Show();
     }
 }
