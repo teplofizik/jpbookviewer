@@ -53,6 +53,7 @@ namespace JpBookViewer
             // 
             this.bNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.bNext.Location = new System.Drawing.Point(513, 418);
+            this.bNext.Enabled = false;
             this.bNext.Name = "bNext";
             this.bNext.Size = new System.Drawing.Size(364, 30);
             this.bNext.TabIndex = 3;
@@ -64,6 +65,7 @@ namespace JpBookViewer
             // 
             this.bBack.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.bBack.Location = new System.Drawing.Point(12, 418);
+            this.bBack.Enabled = false;
             this.bBack.Name = "bBack";
             this.bBack.Size = new System.Drawing.Size(364, 30);
             this.bBack.TabIndex = 1;
@@ -84,7 +86,7 @@ namespace JpBookViewer
             this.lPage.Name = "lPage";
             this.lPage.Size = new System.Drawing.Size(125, 30);
             this.lPage.TabIndex = 2;
-            this.lPage.Text = "0/0";
+            this.lPage.Text = "…";
             this.lPage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // fMain
@@ -99,7 +101,8 @@ namespace JpBookViewer
             this.KeyPreview = true;
             this.MinimumSize = new System.Drawing.Size(560, 360);
             this.Name = "fMain";
-            this.Text = "Book viewer";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "JP Book Viewer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fMain_FormClosing);
             this.Load += new System.EventHandler(this.fMain_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.fMain_KeyDown);

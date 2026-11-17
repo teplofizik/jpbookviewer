@@ -1,4 +1,5 @@
 ﻿using JpBookViewer.Books;
+using JpBookViewer.View;
 
 namespace JpBookViewer;
 
@@ -9,7 +10,7 @@ public partial class fMain : Form
     public int KanjiViewMode;
 
     private readonly string? _initialPath;
-    private readonly Book _book = new();
+    private Book? _book;
     private int _pageIndex;
 
     public fMain() : this(null)
@@ -30,7 +31,7 @@ public partial class fMain : Form
         return dFolder.ShowDialog(this) == DialogResult.OK ? dFolder.SelectedPath : null;
     }
 
-    private void fMain_Load(object? sender, EventArgs e)
+    private async void fMain_Load(object? sender, EventArgs e)
     {
         var path = GetPath();
         if (string.IsNullOrWhiteSpace(path))
@@ -39,50 +40,86 @@ public partial class fMain : Form
             return;
         }
 
+        canvas.DisplayOptions = CreateDisplayOptions();
+        await LoadBookAsync(path);
+    }
+
+    private AnnotationDisplayOptions CreateDisplayOptions()
+    {
+        return new AnnotationDisplayOptions
+        {
+            ShowAllRegions = C.ShowAllRegions,
+            ShowLabels = C.ShowLabels,
+            ShowConfidence = C.ShowConfidence,
+            ShowMetadata = C.ShowMetadata,
+            HintInCorner = KanjiViewMode == 1,
+        };
+    }
+
+    private async Task LoadBookAsync(string path)
+    {
+        UseWaitCursor = true;
+        Text = "Загрузка…";
+
         try
         {
-            _book.Load(path);
+            var book = await Task.Run(() => BookSourceFactory.Open(path));
+
+            if (IsDisposed)
+            {
+                book.Dispose();
+                return;
+            }
+
+            _book = book;
+
+            if (_book.Pages.Count == 0)
+            {
+                MessageBox.Show(this, "В книге не найдено ни одной страницы.",
+                    "Не удалось открыть книгу", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Close();
+                return;
+            }
+
+            if (C.BookID == _book.Name && C.PageNumber >= 0 && C.PageNumber < _book.Pages.Count)
+                _pageIndex = C.PageNumber;
+
+            Text = string.Equals(_book.Name, _book.Source, StringComparison.OrdinalIgnoreCase)
+                ? _book.Name
+                : $"{_book.Name} — {_book.Source}";
+
+            if (ConvertToWeb)
+                _book.ProcessToWeb();
+
+            SetPage(_pageIndex);
+
+            if (C.BookID != _book.Name)
+            {
+                C.BookID = _book.Name;
+                C.Changed = true;
+            }
+
+            canvas.Focus();
         }
         catch (Exception ex)
         {
+            if (IsDisposed)
+                return;
+
             MessageBox.Show(this, ex.Message, "Не удалось открыть книгу",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
-            return;
         }
-
-        if (_book.Pages.Count == 0)
+        finally
         {
-            MessageBox.Show(this, "В папке книги не найдено ни одной страницы.",
-                "Не удалось открыть книгу", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Close();
-            return;
+            if (!IsDisposed)
+                UseWaitCursor = false;
         }
-
-        canvas.HintInCorner = KanjiViewMode == 1;
-
-        if (C.BookID == _book.Name && C.PageNumber >= 0 && C.PageNumber < _book.Pages.Count)
-            _pageIndex = C.PageNumber;
-
-        Text = _book.Name;
-
-        if (ConvertToWeb)
-            _book.ProcessToWeb();
-
-        SetPage(_pageIndex);
-
-        if (C.BookID != _book.Name)
-        {
-            C.BookID = _book.Name;
-            C.Changed = true;
-        }
-
-        canvas.Focus();
     }
 
     private void SetPage(int index)
     {
-        if (index < 0 || index >= _book.Pages.Count)
+        if (_book == null || index < 0 || index >= _book.Pages.Count)
             return;
 
         _pageIndex = index;
@@ -112,6 +149,9 @@ public partial class fMain : Form
 
     private void fMain_KeyDown(object? sender, KeyEventArgs e)
     {
+        if (_book == null)
+            return;
+
         switch (e.KeyCode)
         {
             case Keys.Left:
@@ -139,5 +179,12 @@ public partial class fMain : Form
     {
         if (C.Changed)
             C.Save();
+    }
+
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        _book?.Dispose();
+        _book = null;
+        base.OnFormClosed(e);
     }
 }

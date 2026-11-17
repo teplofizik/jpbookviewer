@@ -18,7 +18,7 @@ public partial class fSelector : Form
 
     private void CheckButtonState()
     {
-        bOpen.Enabled = CodhRois.CheckIsRois(tPath.Text);
+        bOpen.Enabled = BookSourceFactory.CanOpen(tPath.Text);
     }
 
     private void tPath_TextChanged(object? sender, EventArgs e)
@@ -38,10 +38,30 @@ public partial class fSelector : Form
         }
     }
 
+    private void bSelectArchive_Click(object? sender, EventArgs e)
+    {
+        using var dialog = new OpenFileDialog
+        {
+            Title = "Выберите архив книги",
+            Filter = "ZIP-архивы (*.zip)|*.zip|Все файлы (*.*)|*.*",
+            CheckFileExists = true,
+        };
+
+        if (dialog.ShowDialog(this) == DialogResult.OK)
+        {
+            tPath.Text = dialog.FileName;
+            CheckButtonState();
+        }
+    }
+
     private void fSelector_Load(object? sender, EventArgs e)
     {
         tPath.Text = _config.LastPath;
-        cbKanjiViewMode.SelectedIndex = _config.ViewMode;
+        cbKanjiViewMode.SelectedIndex = _config.ViewMode is >= 0 and <= 1 ? _config.ViewMode : 0;
+        cbShowAllRegions.Checked = _config.ShowAllRegions;
+        cbShowLabels.Checked = _config.ShowLabels;
+        cbShowConfidence.Checked = _config.ShowConfidence;
+        cbShowMetadata.Checked = _config.ShowMetadata;
         CheckButtonState();
     }
 
@@ -58,6 +78,10 @@ public partial class fSelector : Form
 
         _config.LastPath = tPath.Text;
         _config.ViewMode = cbKanjiViewMode.SelectedIndex;
+        _config.ShowAllRegions = cbShowAllRegions.Checked;
+        _config.ShowLabels = cbShowLabels.Checked;
+        _config.ShowConfidence = cbShowConfidence.Checked;
+        _config.ShowMetadata = cbShowMetadata.Checked;
         _config.Save();
 
         main.Show();

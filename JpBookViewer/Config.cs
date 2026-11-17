@@ -13,8 +13,17 @@ public sealed class Config
 
     public int ViewMode { get; set; }
 
+    public bool ShowAllRegions { get; set; }
+
+    public bool ShowLabels { get; set; }
+
+    public bool ShowConfidence { get; set; } = true;
+
+    public bool ShowMetadata { get; set; } = true;
+
     public string LastPath { get; set; } = "";
 
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool Changed { get; set; }
 
     private static string ConfigDirectory => Path.Combine(

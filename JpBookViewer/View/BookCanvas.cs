@@ -1,3 +1,4 @@
+using System.Globalization;
 using JpBookViewer.Books;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -8,11 +9,12 @@ public sealed class BookCanvas : SKControl
 {
     private const float MinScale = 0.05f;
     private const float MaxScale = 16f;
+    private const int MaxMetadataLines = 4;
 
     private static readonly SKSamplingOptions Sampling =
         new(SKFilterMode.Linear, SKMipmapMode.Linear);
 
-    private static readonly Lazy<SKTypeface> JapaneseTypeface = new(() =>
+    private static readonly Lazy<SKTypeface> TextTypeface = new(() =>
     {
         try
         {
@@ -27,10 +29,17 @@ public sealed class BookCanvas : SKControl
         }
     });
 
+    private static readonly Lazy<SKTypeface> InterfaceTypeface = new(() =>
+        SKTypeface.FromFamilyName("Segoe UI")
+        ?? SKTypeface.FromFamilyName("Tahoma")
+        ?? SKTypeface.Default);
+
     private SKBitmap? _bitmap;
     private SKImage? _image;
-    private Page? _page;
-    private PageRect? _hover;
+    private BookPage? _page;
+    private AnnotationRegion? _hover;
+
+    private AnnotationDisplayOptions _displayOptions = new();
 
     private float _scale = 1f;
     private float _offsetX;
@@ -45,8 +54,6 @@ public sealed class BookCanvas : SKControl
     private bool _panning;
     private Point _lastMouse;
 
-    private bool _hintInCorner;
-
     public BookCanvas()
     {
         BackColor = Color.Black;
@@ -57,20 +64,17 @@ public sealed class BookCanvas : SKControl
 
     [System.ComponentModel.Browsable(false)]
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
-    public bool HintInCorner
+    public AnnotationDisplayOptions DisplayOptions
     {
-        get => _hintInCorner;
+        get => _displayOptions;
         set
         {
-            if (_hintInCorner == value)
-                return;
-
-            _hintInCorner = value;
+            _displayOptions = value ?? new AnnotationDisplayOptions();
             Invalidate();
         }
     }
 
-    public void SetPage(Page page)
+    public void SetPage(BookPage page)
     {
         _page = page;
         _hover = null;
@@ -80,14 +84,7 @@ public sealed class BookCanvas : SKControl
         _bitmap?.Dispose();
         _bitmap = null;
 
-        try
-        {
-            _bitmap = SKBitmap.Decode(page.Image);
-        }
-        catch (Exception)
-        {
-            _bitmap = null;
-        }
+        _bitmap = page.Image.Load();
 
         if (_bitmap != null)
             _image = SKImage.FromBitmap(_bitmap);
@@ -147,10 +144,10 @@ public sealed class BookCanvas : SKControl
         canvas.Translate(_offsetX, _offsetY);
         canvas.Scale(_scale);
         canvas.DrawImage(_image, 0, 0, Sampling);
-        DrawHoveredRect(canvas);
+        DrawRegions(canvas);
         canvas.Restore();
 
-        DrawCornerHint(canvas);
+        DrawHoverInfo(canvas);
     }
 
     private void FitToView()
@@ -170,75 +167,184 @@ public sealed class BookCanvas : SKControl
         _offsetY = (_surfaceHeight - imageHeight * _scale) / 2f;
     }
 
-    private void DrawHoveredRect(SKCanvas canvas)
+    private void DrawRegions(SKCanvas canvas)
+    {
+        if (_page == null || _image == null)
+            return;
+
+        var imageWidth = _image.Width;
+        var imageHeight = _image.Height;
+
+        foreach (var region in _page.Regions)
+        {
+            if (ReferenceEquals(region, _hover))
+                continue;
+
+            var rect = region.Bounds.ToPixels(imageWidth, imageHeight);
+            var color = AnnotationPalette.Resolve(region);
+
+            if (_displayOptions.ShowAllRegions)
+            {
+                using var stroke = new SKPaint
+                {
+                    Color = color.WithAlpha(150),
+                    Style = SKPaintStyle.Stroke,
+                    StrokeWidth = 1.5f / _scale,
+                    IsAntialias = true,
+                };
+                canvas.DrawRect(rect, stroke);
+            }
+
+            if (_displayOptions.ShowLabels && !string.IsNullOrEmpty(region.Text))
+                DrawTextFitted(canvas, region.Text, rect, 0.8f, color.WithAlpha(230));
+        }
+
+        DrawHoveredRegion(canvas, imageWidth, imageHeight);
+    }
+
+    private void DrawHoveredRegion(SKCanvas canvas, int imageWidth, int imageHeight)
     {
         if (_hover == null)
             return;
 
-        var rect = _hover.Rect;
+        var rect = _hover.Bounds.ToPixels(imageWidth, imageHeight);
+        var color = AnnotationPalette.Resolve(_hover);
 
-        using var fill = new SKPaint
+        using (var fill = new SKPaint
+               {
+                   Color = color.WithAlpha(60),
+                   Style = SKPaintStyle.Fill,
+                   IsAntialias = true,
+               })
         {
-            Color = new SKColor(255, 0, 0, 50),
-            Style = SKPaintStyle.Fill,
-            IsAntialias = true,
-        };
-        canvas.DrawRect(rect, fill);
+            canvas.DrawRect(rect, fill);
+        }
 
-        if (_hintInCorner)
+        using (var stroke = new SKPaint
+               {
+                   Color = color.WithAlpha(230),
+                   Style = SKPaintStyle.Stroke,
+                   StrokeWidth = 2f / _scale,
+                   IsAntialias = true,
+               })
         {
-            using var stroke = new SKPaint
-            {
-                Color = new SKColor(255, 64, 64, 220),
-                Style = SKPaintStyle.Stroke,
-                StrokeWidth = 2f / _scale,
-                IsAntialias = true,
-            };
             canvas.DrawRect(rect, stroke);
         }
-        else
-        {
-            DrawGlyph(canvas, _hover.Kanji, rect, 0.9f);
-        }
+
+        if (!_displayOptions.HintInCorner && !string.IsNullOrEmpty(_hover.Text))
+            DrawTextFitted(canvas, _hover.Text, rect, 0.9f, SKColors.Black);
     }
 
-    private void DrawCornerHint(SKCanvas canvas)
+    private void DrawHoverInfo(SKCanvas canvas)
     {
-        if (!_hintInCorner || _hover == null || string.IsNullOrEmpty(_hover.Kanji))
+        if (_hover == null)
+            return;
+
+        var details = BuildDetails(_hover);
+
+        if (_displayOptions.HintInCorner)
+        {
+            DrawInfoPanel(canvas, _hover.DisplayText, details);
+            return;
+        }
+
+        if (details.Count > 0)
+            DrawInfoPanel(canvas, null, details);
+    }
+
+    private List<string> BuildDetails(AnnotationRegion region)
+    {
+        var details = new List<string>();
+
+        if (_displayOptions.ShowMetadata && !string.IsNullOrWhiteSpace(region.Type))
+            details.Add($"Тип: {region.Type}");
+
+        if (_displayOptions.ShowConfidence && region.Confidence is { } confidence)
+            details.Add($"Уверенность: {FormatConfidence(confidence)}");
+
+        if (_displayOptions.ShowMetadata)
+        {
+            var metadata = region.Metadata
+                .Where(pair => !(region.Type != null && pair.Key.Equals("type", StringComparison.OrdinalIgnoreCase)))
+                .Where(pair => !(region.Confidence != null && pair.Key.Equals("confidence", StringComparison.OrdinalIgnoreCase)))
+                .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                .Take(MaxMetadataLines);
+
+            foreach (var pair in metadata)
+                details.Add($"{pair.Key}: {pair.Value}");
+        }
+
+        return details;
+    }
+
+    private void DrawInfoPanel(SKCanvas canvas, string? title, IReadOnlyList<string> details)
+    {
+        var hasTitle = !string.IsNullOrEmpty(title);
+        if (!hasTitle && details.Count == 0)
             return;
 
         var ui = _surfaceScaleX > 0 ? _surfaceScaleX : 1f;
-        var panel = 96f * ui;
         var margin = 12f * ui;
-        var rect = new SKRect(margin, margin, margin + panel, margin + panel);
+        var padding = 10f * ui;
+        var detailSize = 12f * ui;
+        var detailLineHeight = detailSize * 1.45f;
+        var titleHeight = hasTitle ? 64f * ui : 0f;
 
-        using var background = new SKPaint
+        using var detailFont = new SKFont(InterfaceTypeface.Value, detailSize);
+        var detailsWidth = details.Count == 0 ? 0f : details.Max(line => detailFont.MeasureText(line));
+        var panelWidth = Math.Clamp(MathF.Max(120f * ui, detailsWidth + padding * 2), 120f * ui, 420f * ui);
+        var panelHeight = padding * 2 + titleHeight + details.Count * detailLineHeight;
+
+        var panel = new SKRect(margin, margin, margin + panelWidth, margin + panelHeight);
+
+        using (var background = new SKPaint
+               {
+                   Color = new SKColor(255, 255, 255, 238),
+                   Style = SKPaintStyle.Fill,
+                   IsAntialias = true,
+               })
         {
-            Color = new SKColor(255, 255, 255, 235),
-            Style = SKPaintStyle.Fill,
-            IsAntialias = true,
-        };
-        using var border = new SKPaint
+            canvas.DrawRoundRect(panel, 6f * ui, 6f * ui, background);
+        }
+
+        using (var border = new SKPaint
+               {
+                   Color = SKColors.Black,
+                   Style = SKPaintStyle.Stroke,
+                   StrokeWidth = 2f * ui,
+                   IsAntialias = true,
+               })
         {
-            Color = SKColors.Black,
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = 2f * ui,
-            IsAntialias = true,
-        };
+            canvas.DrawRoundRect(panel, 6f * ui, 6f * ui, border);
+        }
 
-        canvas.DrawRoundRect(rect, 6f * ui, 6f * ui, background);
-        canvas.DrawRoundRect(rect, 6f * ui, 6f * ui, border);
+        var contentLeft = panel.Left + padding;
+        var contentRight = panel.Right - padding;
 
-        var inner = new SKRect(
-            rect.Left + 6f * ui,
-            rect.Top + 6f * ui,
-            rect.Right - 6f * ui,
-            rect.Bottom - 6f * ui);
+        if (hasTitle)
+        {
+            var titleArea = new SKRect(contentLeft, panel.Top + padding, contentRight, panel.Top + padding + titleHeight);
+            DrawTextFitted(canvas, title!, titleArea, 0.82f, SKColors.Black);
+        }
 
-        DrawGlyph(canvas, _hover.Kanji, inner, 0.82f);
+        if (details.Count > 0)
+        {
+            using var paint = new SKPaint { Color = new SKColor(30, 30, 30), IsAntialias = true };
+            canvas.Save();
+            canvas.ClipRect(panel);
+
+            var y = panel.Top + padding + titleHeight + detailSize;
+            foreach (var line in details)
+            {
+                canvas.DrawText(line, contentLeft, y, detailFont, paint);
+                y += detailLineHeight;
+            }
+
+            canvas.Restore();
+        }
     }
 
-    private static void DrawGlyph(SKCanvas canvas, string text, SKRect area, float factor)
+    private static void DrawTextFitted(SKCanvas canvas, string text, SKRect area, float factor, SKColor color)
     {
         if (string.IsNullOrEmpty(text) || area.Width <= 0 || area.Height <= 0)
             return;
@@ -247,7 +353,7 @@ public sealed class BookCanvas : SKControl
         if (maxSize <= 0)
             return;
 
-        using var font = new SKFont(JapaneseTypeface.Value, maxSize);
+        using var font = new SKFont(TextTypeface.Value, maxSize);
         var bounds = new SKRect();
         var width = font.MeasureText(text, out bounds);
 
@@ -258,19 +364,27 @@ public sealed class BookCanvas : SKControl
             font.MeasureText(text, out bounds);
         }
 
-        using var paint = new SKPaint
+        var maxHeight = area.Height * factor;
+        if (bounds.Height > maxHeight && bounds.Height > 0)
         {
-            Color = SKColors.Black,
-            IsAntialias = true,
-        };
+            font.Size *= maxHeight / bounds.Height;
+            font.MeasureText(text, out bounds);
+        }
 
+        using var paint = new SKPaint { Color = color, IsAntialias = true };
         canvas.DrawText(text, area.MidX - bounds.MidX, area.MidY - bounds.MidY, font, paint);
+    }
+
+    private static string FormatConfidence(double value)
+    {
+        var percent = value <= 1.0 ? value * 100.0 : value;
+        return percent.ToString("0.#", CultureInfo.InvariantCulture) + "%";
     }
 
     private void DrawEmptyState(SKCanvas canvas)
     {
         var ui = _surfaceScaleX > 0 ? _surfaceScaleX : 1f;
-        using var font = new SKFont(SKTypeface.Default, 16f * ui);
+        using var font = new SKFont(InterfaceTypeface.Value, 16f * ui);
         using var paint = new SKPaint
         {
             Color = new SKColor(160, 160, 160),
@@ -361,17 +475,26 @@ public sealed class BookCanvas : SKControl
     private void UpdateHover(Point location)
     {
         var pagePoint = ToPage(ToSurface(location));
-        PageRect? hover = null;
+        AnnotationRegion? hover = null;
 
-        if (_page != null)
+        if (_page != null && _image != null)
         {
-            foreach (var rect in _page.Rects)
+            var imageWidth = _image.Width;
+            var imageHeight = _image.Height;
+            var bestArea = float.MaxValue;
+
+            foreach (var region in _page.Regions)
             {
-                if (!rect.Rect.Contains(pagePoint.X, pagePoint.Y))
+                var rect = region.Bounds.ToPixels(imageWidth, imageHeight);
+                if (!rect.Contains(pagePoint.X, pagePoint.Y))
                     continue;
 
-                hover = rect;
-                break;
+                var area = rect.Width * rect.Height;
+                if (area >= bestArea)
+                    continue;
+
+                hover = region;
+                bestArea = area;
             }
         }
 

@@ -3,72 +3,91 @@ using SkiaSharp;
 
 namespace JpBookViewer.Books;
 
-public sealed class Book
+public sealed class Book : IDisposable
 {
-    public List<Page> Pages { get; } = new();
+    private readonly IReadOnlyStorage _storage;
+    private bool _disposed;
 
-    public string Name { get; private set; } = "";
-
-    public string Directory { get; private set; } = "";
-
-    public void Load(string directory)
+    public Book(string name, string source, IReadOnlyStorage storage, IReadOnlyList<BookPage> pages)
     {
-        Pages.Clear();
-
-        var source = new CodhRois(directory);
-        Directory = directory;
-        Name = source.Name;
-
-        foreach (var image in source.Images)
-            Pages.Add(new Page(image));
-
-        foreach (var rectangle in source.Rectangles)
-        {
-            var pageIndex = source.GetPageId(rectangle.Image);
-            if (pageIndex >= 0 && pageIndex < Pages.Count)
-                Pages[pageIndex].Rects.Add(new PageRect(rectangle.Rect, rectangle.CharView));
-        }
+        Name = name;
+        Source = source;
+        _storage = storage;
+        Pages = pages;
     }
 
+    public string Name { get; }
+
+    public string Source { get; }
+
+    public IReadOnlyList<BookPage> Pages { get; }
+
     public void ProcessToWeb()
+    {
+        ProcessToWeb(GetDefaultWebDirectory());
+    }
+
+    public void ProcessToWeb(string outputDirectory)
     {
         if (Pages.Count == 0)
             return;
 
-        var webDirectory = Path.Combine(Directory, "web");
-        var dataDirectory = Path.Combine(webDirectory, "data");
-        var imagesDirectory = Path.Combine(webDirectory, "images");
+        var dataDirectory = Path.Combine(outputDirectory, "data");
+        var imagesDirectory = Path.Combine(outputDirectory, "images");
 
-        System.IO.Directory.CreateDirectory(dataDirectory);
-        System.IO.Directory.CreateDirectory(imagesDirectory);
+        Directory.CreateDirectory(dataDirectory);
+        Directory.CreateDirectory(imagesDirectory);
 
         var lines = new List<string>();
 
         foreach (var page in Pages)
         {
-            using var bitmap = SKBitmap.Decode(page.Image);
+            using var bitmap = page.Image.Load();
             if (bitmap == null || bitmap.Width == 0)
                 continue;
 
-            var width = 1000;
+            const int width = 1000;
             var height = Math.Max(1, (int)Math.Round(bitmap.Height * (width / (double)bitmap.Width)));
             var scale = width / (float)bitmap.Width;
+            var fileName = page.Image.Name;
 
-            var fileName = Path.GetFileName(page.Image);
             lines.Add(string.Create(CultureInfo.InvariantCulture,
-                $"{fileName}\t{page.Rects.Count}\t{width}\t{height}"));
+                $"{fileName}\t{page.Regions.Count}\t{width}\t{height}"));
 
-            SaveImageRects(page, Path.Combine(dataDirectory, Path.GetFileNameWithoutExtension(fileName) + ".txt"), scale);
+            SaveImageRects(page, bitmap, Path.Combine(dataDirectory, Path.GetFileNameWithoutExtension(fileName) + ".txt"), scale);
             SaveImage(bitmap, width, height, Path.Combine(imagesDirectory, fileName));
         }
 
-        File.WriteAllLines(Path.Combine(webDirectory, "list.txt"), lines);
+        File.WriteAllLines(Path.Combine(outputDirectory, "list.txt"), lines);
     }
 
-    private static void SaveImageRects(Page page, string fileName, float scale)
+    public void Dispose()
     {
-        var lines = page.Rects.Select(rectangle => string.Create(CultureInfo.InvariantCulture,
-            $"{rectangle.Rect.Left * scale:0}\t{rectangle.Rect.Top * scale:0}\t{rectangle.Rect.Width * scale:0}\t{rectangle.Rect.Height * scale:0}\t{rectangle.Kanji}"));
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _storage.Dispose();
+    }
+
+    private string GetDefaultWebDirectory()
+    {
+        var root = _storage.LocalRoot
+            ?? Path.Combine(Path.GetTempPath(), "CodhRoisReader-web", MakeSafeFileName(Name));
+
+        return Path.Combine(root, "web");
+    }
+
+    private static void SaveImageRects(BookPage page, SKBitmap bitmap, string fileName, float scale)
+    {
+        var lines = new List<string>(page.Regions.Count);
+
+        foreach (var region in page.Regions)
+        {
+            var rect = region.Bounds.ToPixels(bitmap.Width, bitmap.Height);
+            lines.Add(string.Create(CultureInfo.InvariantCulture,
+                $"{rect.Left * scale:0}\t{rect.Top * scale:0}\t{rect.Width * scale:0}\t{rect.Height * scale:0}\t{region.DisplayText}"));
+        }
 
         File.WriteAllLines(fileName, lines);
     }
@@ -87,5 +106,14 @@ public sealed class Book
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, 70);
         using var stream = File.Create(fileName);
         data.SaveTo(stream);
+    }
+
+    private static string MakeSafeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var chars = name.Select(c => invalid.Contains(c) ? '_' : c).ToArray();
+        var result = new string(chars).Trim();
+
+        return result.Length == 0 ? "book" : result;
     }
 }
