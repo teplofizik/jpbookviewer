@@ -35,24 +35,27 @@ namespace JpBookViewer
             this.bBack = new System.Windows.Forms.Button();
             this.dFolder = new System.Windows.Forms.FolderBrowserDialog();
             this.lPage = new System.Windows.Forms.Label();
+            this.menuStrip = new System.Windows.Forms.MenuStrip();
+            this.miView = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuStrip.SuspendLayout();
             this.SuspendLayout();
-            // 
+            //
             // canvas
-            // 
+            //
             this.canvas.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.canvas.BackColor = System.Drawing.Color.Black;
-            this.canvas.Location = new System.Drawing.Point(12, 12);
+            this.canvas.Location = new System.Drawing.Point(12, 36);
             this.canvas.Name = "canvas";
             this.canvas.Size = new System.Drawing.Size(865, 396);
             this.canvas.TabIndex = 0;
             this.canvas.TabStop = true;
-            // 
+            //
             // bNext
-            // 
+            //
             this.bNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.bNext.Location = new System.Drawing.Point(513, 418);
+            this.bNext.Location = new System.Drawing.Point(513, 442);
             this.bNext.Enabled = false;
             this.bNext.Name = "bNext";
             this.bNext.Size = new System.Drawing.Size(364, 30);
@@ -60,11 +63,11 @@ namespace JpBookViewer
             this.bNext.Text = "Вперёд →";
             this.bNext.UseVisualStyleBackColor = true;
             this.bNext.Click += new System.EventHandler(this.bNext_Click);
-            // 
+            //
             // bBack
-            // 
+            //
             this.bBack.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.bBack.Location = new System.Drawing.Point(12, 418);
+            this.bBack.Location = new System.Drawing.Point(12, 442);
             this.bBack.Enabled = false;
             this.bBack.Name = "bBack";
             this.bBack.Size = new System.Drawing.Size(364, 30);
@@ -72,41 +75,62 @@ namespace JpBookViewer
             this.bBack.Text = "← Назад";
             this.bBack.UseVisualStyleBackColor = true;
             this.bBack.Click += new System.EventHandler(this.bBack_Click);
-            // 
+            //
             // dFolder
-            // 
+            //
             this.dFolder.Description = "Select folder with Codh.Rois data";
             this.dFolder.UseDescriptionForTitle = true;
-            // 
+            //
             // lPage
-            // 
-            this.lPage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.lPage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.lPage.Location = new System.Drawing.Point(382, 418);
+            this.lPage.Location = new System.Drawing.Point(382, 442);
             this.lPage.Name = "lPage";
             this.lPage.Size = new System.Drawing.Size(125, 30);
             this.lPage.TabIndex = 2;
             this.lPage.Text = "…";
             this.lPage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
+            //
+            // menuStrip
+            //
+            this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miView});
+            this.menuStrip.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip.Name = "menuStrip";
+            this.menuStrip.Size = new System.Drawing.Size(889, 24);
+            this.menuStrip.TabIndex = 0;
+            this.menuStrip.Text = "menuStrip";
+            //
+            // miView
+            //
+            this.miView.Name = "miView";
+            this.miView.Size = new System.Drawing.Size(39, 20);
+            this.miView.Text = "Вид";
+            //
             // fMain
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(889, 460);
+            this.ClientSize = new System.Drawing.Size(889, 484);
             this.Controls.Add(this.lPage);
             this.Controls.Add(this.bBack);
             this.Controls.Add(this.bNext);
             this.Controls.Add(this.canvas);
+            this.Controls.Add(this.menuStrip);
             this.KeyPreview = true;
-            this.MinimumSize = new System.Drawing.Size(560, 360);
+            this.MainMenuStrip = this.menuStrip;
+            this.MinimumSize = new System.Drawing.Size(900, 400);
             this.Name = "fMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "JP Book Viewer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fMain_FormClosing);
             this.Load += new System.EventHandler(this.fMain_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.fMain_KeyDown);
+            this.menuStrip.ResumeLayout(false);
+            this.menuStrip.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -117,5 +141,7 @@ namespace JpBookViewer
         private System.Windows.Forms.Button bBack;
         private System.Windows.Forms.FolderBrowserDialog dFolder;
         private System.Windows.Forms.Label lPage;
+        private System.Windows.Forms.MenuStrip menuStrip;
+        private System.Windows.Forms.ToolStripMenuItem miView;
     }
 }

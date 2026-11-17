@@ -10,8 +10,12 @@ public partial class fMain : Form
     public int KanjiViewMode;
 
     private readonly string? _initialPath;
+    private readonly ContextMenuStrip _viewContextMenu = new();
+    private readonly ViewMenuItems _topMenuItems = new();
+    private readonly ViewMenuItems _contextMenuItems = new();
     private Book? _book;
     private int _pageIndex;
+    private bool _menusBuilt;
 
     public fMain() : this(null)
     {
@@ -41,7 +45,107 @@ public partial class fMain : Form
         }
 
         canvas.DisplayOptions = CreateDisplayOptions();
+        BuildMenus();
         await LoadBookAsync(path);
+    }
+
+    private void BuildMenus()
+    {
+        if (_menusBuilt)
+            return;
+
+        _menusBuilt = true;
+
+        BuildMenu(miView.DropDownItems, _topMenuItems);
+        BuildMenu(_viewContextMenu.Items, _contextMenuItems);
+        canvas.ContextMenuStrip = _viewContextMenu;
+
+        SyncViewMenus();
+    }
+
+    private void BuildMenu(ToolStripItemCollection items, ViewMenuItems target)
+    {
+        target.ShowAllRegions = AddCheck(items, "Показывать все области",
+            () => C.ShowAllRegions, value => C.ShowAllRegions = value);
+        target.ShowLabels = AddCheck(items, "Показывать подписи",
+            () => C.ShowLabels, value => C.ShowLabels = value);
+
+        items.Add(new ToolStripSeparator());
+
+        target.ShowConfidence = AddCheck(items, "Показывать уверенность",
+            () => C.ShowConfidence, value => C.ShowConfidence = value);
+        target.ShowMetadata = AddCheck(items, "Показывать метаданные",
+            () => C.ShowMetadata, value => C.ShowMetadata = value);
+
+        items.Add(new ToolStripSeparator());
+
+        target.HintOverlay = new ToolStripMenuItem("Подсказка поверх текста");
+        target.HintOverlay.Click += (_, _) => SetHintMode(false);
+        target.HintCorner = new ToolStripMenuItem("Подсказка в углу");
+        target.HintCorner.Click += (_, _) => SetHintMode(true);
+        items.Add(target.HintOverlay);
+        items.Add(target.HintCorner);
+
+        items.Add(new ToolStripSeparator());
+
+        var fitPage = new ToolStripMenuItem("Вписать страницу");
+        fitPage.Click += (_, _) => canvas.FitToWindow();
+        items.Add(fitPage);
+    }
+
+    private ToolStripMenuItem AddCheck(
+        ToolStripItemCollection items,
+        string text,
+        Func<bool> getValue,
+        Action<bool> setValue)
+    {
+        var item = new ToolStripMenuItem(text)
+        {
+            CheckOnClick = true,
+            Checked = getValue(),
+        };
+
+        item.Click += (_, _) =>
+        {
+            setValue(item.Checked);
+            SyncViewMenus();
+            ApplyDisplayOptions();
+        };
+
+        items.Add(item);
+        return item;
+    }
+
+    private void SyncViewMenus()
+    {
+        if (!_menusBuilt)
+            return;
+
+        Sync(_topMenuItems);
+        Sync(_contextMenuItems);
+
+        void Sync(ViewMenuItems items)
+        {
+            items.ShowAllRegions.Checked = C.ShowAllRegions;
+            items.ShowLabels.Checked = C.ShowLabels;
+            items.ShowConfidence.Checked = C.ShowConfidence;
+            items.ShowMetadata.Checked = C.ShowMetadata;
+            items.HintOverlay.Checked = KanjiViewMode != 1;
+            items.HintCorner.Checked = KanjiViewMode == 1;
+        }
+    }
+
+    private void SetHintMode(bool inCorner)
+    {
+        KanjiViewMode = inCorner ? 1 : 0;
+        SyncViewMenus();
+        ApplyDisplayOptions();
+    }
+
+    private void ApplyDisplayOptions()
+    {
+        canvas.DisplayOptions = CreateDisplayOptions();
+        C.Changed = true;
     }
 
     private AnnotationDisplayOptions CreateDisplayOptions()
@@ -185,6 +289,17 @@ public partial class fMain : Form
     {
         _book?.Dispose();
         _book = null;
+        _viewContextMenu.Dispose();
         base.OnFormClosed(e);
+    }
+
+    private sealed class ViewMenuItems
+    {
+        public ToolStripMenuItem ShowAllRegions = null!;
+        public ToolStripMenuItem ShowLabels = null!;
+        public ToolStripMenuItem ShowConfidence = null!;
+        public ToolStripMenuItem ShowMetadata = null!;
+        public ToolStripMenuItem HintOverlay = null!;
+        public ToolStripMenuItem HintCorner = null!;
     }
 }

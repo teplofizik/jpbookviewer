@@ -4,6 +4,7 @@ public static class BookSourceFactory
 {
     private static readonly IBookFormat[] Formats =
     [
+        new ManyoshuBookFormat(),
         new JsonBookFormat(),
         new CodhRoisBookFormat(),
     ];

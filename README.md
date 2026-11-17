@@ -14,6 +14,8 @@ Open a book from a folder, a ZIP archive or a remote ZIP archive (HTTP/HTTPS).
 - Two hint modes: glyph over the region, or an info box in the corner.
 - Character, line and block regions with optional metadata: type, confidence, color and arbitrary key/value pairs.
 - Display toggles: all regions, labels, confidence, metadata. Missing metadata is simply not shown.
+- The `Вид` menu and the canvas right-click menu toggle display options, switch hint mode and fit the
+  page on the fly; changes are saved.
 - Remembers the last book, page and display settings.
 - Optional static web export (`Book.ProcessToWeb`).
 
@@ -60,6 +62,27 @@ The executable is produced as `CodhRoisReader.exe`.
 
 CSV columns: `Unicode,Image,X,Y,Block ID,Char ID,Width,Height`.
 Regions are character boxes; block/char/unicode values are exposed as metadata.
+
+### Manyoshu OCR manifest
+
+Open a folder containing `manyoshu.book.json`:
+
+```json
+{
+  "format": "manyoshu-lines",
+  "version": 1,
+  "name": "Manyoshu OCR",
+  "lines": "manyoshu_lines_roles.jsonl",
+  "imageRoot": "F:/SOFT/NyaKobunReader/work/manyoshu_pilot"
+}
+```
+
+`lines` is a JSONL file produced by NyaKobunReader. Each row supplies `image`, `bbox`,
+`role`, `text`, `text_clean`, `global_line_id`, `ref_block_id`, `ref_segment_ids`,
+`comment_kind` and related metadata. `imageRoot` is used for relative image paths;
+absolute paths in the JSONL are also accepted. The format shows poem/header/comment/
+reading/small/artifact roles with distinct colors and exposes OCR, block and segment
+information in the hover panel.
 
 ### Generic JSON
 
